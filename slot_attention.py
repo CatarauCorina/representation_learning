@@ -35,7 +35,7 @@ class SlotAttention(nn.Module):
         self.norm_pre_ff = nn.LayerNorm(dim)
 
     def forward(self, inputs, num_slots=None):
-        b,ch, n, d, device = *inputs.shape, inputs.device
+        b, n, d, device = *inputs.shape, inputs.device
         n_s = num_slots if num_slots is not None else self.num_slots
 
         mu = self.slots_mu.expand(b, n_s, -1)
