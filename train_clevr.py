@@ -23,11 +23,12 @@ def train(model, nr_epochs, optimizer, writer, device, dl, test_dl):
         i = train_step(model, optimizer, writer,e, device, dl, test_dl, i)
 
 
-def eval(model,test_ds, writer, i):
+def eval(model,test_ds, writer, i, device):
     loss = 0
     iter = 0
     with torch.no_grad():
         for i_batch, img_test in enumerate(test_ds):
+            img_test = img_test.to(device)
             recon_combined, recons, masks, slots = model(img_test)
             loss_value = l2_loss(recon_combined, img_test)
             loss += loss_value
@@ -44,8 +45,8 @@ def train_step(enc, optimizer, writer, epoch, device, dl, test_ds, i):
         loss_value.backward()
         optimizer.step()
         writer.add_scalar('Loss iter', loss_value, i)
-        if i % 200 == 0 and i != 0:
-            eval(enc, test_ds, writer, i)
+        if i % 10000 == 0 and i != 0:
+            eval(enc, test_ds, writer, i, device)
         i+=1
     writer.add_scalar('Loss train', loss_value, epoch)
     torch.save(enc.state_dict(),f'model_epoch_{epoch}.pth')
@@ -59,7 +60,7 @@ def main():
 
     dl_train = DataLoader(dataset=train_ds, batch_size=10)
     dl_test = DataLoader(dataset=test_ds, batch_size=10)
-    writer = SummaryWriter(f'results/object_discovery_init100')
+    writer = SummaryWriter(f'results/object_discovery_init10')
     device = torch.device('cpu')
     if torch.cuda.is_available():
         device = torch.device('cuda')
