@@ -4,6 +4,8 @@ from torch import nn
 from torch.functional import F
 import numpy as np
 from slot_attention import SlotAttention
+from torchvision import transforms
+
 
 
 def spatial_flatten_channels(x):
@@ -22,16 +24,19 @@ class PositionalEncoding(nn.Module):
         self.grid = self.build_grid(resolution)
 
     def build_grid(self, resolution):
+        device = torch.device('cpu')
+        if torch.cuda.is_available():
+            device = torch.device('cuda')
         ranges = [np.linspace(0., 1., num=res) for res in resolution]
         grid = np.meshgrid(*ranges, indexing="ij")
         grid = np.stack(grid, axis=-1)
         grid = np.reshape(grid, [resolution[0], resolution[1], -1])
         grid = np.expand_dims(grid, axis=0)
         grid = grid.astype(np.float32)
-        return np.concatenate([grid, 1.0 - grid], axis=-1)
+        return torch.tensor(np.concatenate([grid, 1.0 - grid], axis=-1),dtype=torch.float32).to(device)
 
     def forward(self, x):
-        positional_vector = self.dense(torch.tensor(self.grid)).permute(0,3,2,1)
+        positional_vector = self.dense(self.grid).permute(0,3,2,1)
         x = x + positional_vector
 
         return x
@@ -81,6 +86,9 @@ class AutoEncSlot(nn.Module):
                  resolution=(112, 112)
                  ):
         super().__init__()
+        self.device = torch.device('cpu')
+        if torch.cuda.is_available():
+            self.device = torch.device('cuda')
         self.resolution = resolution
         self.decoder_initial_size = (8, 8)
         self.encoder_slot = EncoderSlot()
@@ -90,6 +98,7 @@ class AutoEncSlot(nn.Module):
         self.layer_norm = torch.nn.LayerNorm([channels, resolution[0]*resolution[1]])
         self.mlp = nn.Linear(resolution[0]*resolution[1], 64)
         self.slot_attention_model = SlotAttention(num_slots=11, dim=64, iters=3)
+        self.size_transf = transforms.Compose([transforms.Resize((128, 128))])
 
         return
 
@@ -103,8 +112,8 @@ class AutoEncSlot(nn.Module):
         x_grid, y_grid = torch.meshgrid(x, y)
         z = torch.reshape(z, [-1, z.shape[-1]])[:, :, None, None]
         z = z.expand(-1, -1, resolution[0], resolution[1])
-        x_grid = x_grid.expand(11, 1, -1, -1)
-        y_grid = y_grid.expand(11, 1, -1, -1)
+        x_grid = x_grid.expand(11*batch_size, 1, -1, -1).to(self.device)
+        y_grid = y_grid.expand(11*batch_size, 1, -1, -1).to(self.device)
         x = torch.cat((x_grid, y_grid, z), dim=1)
         return x
 
@@ -129,6 +138,6 @@ class AutoEncSlot(nn.Module):
         softmax = torch.nn.Softmax(dim=1)
         masks = softmax(masks)
         recon_combined = torch.sum(recons * masks, dim=1)
-
+        recon_combined = self.size_transf(recon_combined)
         return recon_combined, recons, masks, slots
 

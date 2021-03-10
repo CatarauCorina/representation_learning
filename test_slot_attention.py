@@ -17,6 +17,9 @@ enc = AutoEncSlot()
 dir = f'{os.getcwd()}/imgs/cats.jpg'
 image = torch.tensor(cv2.imread(dir))
 image = compose(image)
+import matplotlib.pyplot as plt
+plt.imshow(image.permute(1,2,0))
+plt.show()
 image = torch.tensor(image.to(device), dtype=torch.float32).squeeze(0)
 out_enc = enc(image.unsqueeze(0))
 
