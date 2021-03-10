@@ -6,6 +6,9 @@ The official code for this paper can be found https://github.com/google-research
 
 The slot attention model was implemented using this repo: https://github.com/lucidrains/slot-attention
 
-The task implemented here is that of object discovery on the clevr dataset.
+The task implemented here is that of object discovery on the clevr dataset. See paper and image below:
+
+![image](https://user-images.githubusercontent.com/8167831/110651690-843f6700-8170-11eb-902b-9edbe6b8e870.png)
+
 
 The results are shown using tensorboard and the checkpoints are saved every epoch. In order to train the model use the train_clevr file, for other datasets the dataset will have to be replaced.
