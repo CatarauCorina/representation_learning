@@ -46,7 +46,7 @@ class EncoderSlot(nn.Module):
 
     def __init__(self):
         super().__init__()
-        self.conv_1 = nn.Conv2d(in_channels=3, out_channels=64, kernel_size=5)
+        self.conv_1 = nn.Conv2d(in_channels=1, out_channels=64, kernel_size=5)
         self.conv_2 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=5)
         self.conv_3 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=5)
         self.conv_4 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=5)

@@ -19,6 +19,7 @@ class CustomDataSet(Dataset):
         self.type = type
         self.compose = transforms.Compose(
             [transforms.Resize(resolution),
+             transforms.Grayscale(),
              transforms.PILToTensor()]
         )
 
